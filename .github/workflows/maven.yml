@@ -35,7 +35,8 @@ jobs:
     - name: Upload JAR artifact
       uses: actions/upload-artifact@v4
       with:
-        path: "target/*jar-with-dependencies.jar"
+        name: app-jar
+        path: "target/app.jar"
         if-no-files-found: error
         
 
