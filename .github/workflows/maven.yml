@@ -35,7 +35,7 @@ jobs:
     - name: Upload JAR artifact
       uses: actions/upload-artifact@v4
       with:
-        path: "**gpg-notepad**jar-with-dependencies.jar"
+        path: "target/*jar-with-dependencies.jar"
         if-no-files-found: error
         
 
