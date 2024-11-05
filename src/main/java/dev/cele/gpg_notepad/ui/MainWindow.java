@@ -4,15 +4,18 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
 import dev.cele.gpg_notepad.ui.components.DnDTabbedPane;
 import dev.cele.gpg_notepad.ui.components.Editor;
+import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.function.BiConsumer;
 
 public class MainWindow extends JFrame {
-
-    static MainWindow instance;
+    @Getter
+    private static MainWindow instance;
 
     JTabbedPane tabbedPane = new DnDTabbedPane();
     JMenuBar menuBar = new JMenuBar();
@@ -25,7 +28,44 @@ public class MainWindow extends JFrame {
             throw new RuntimeException("Only one instance of MainWindow is allowed");
         }
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                var allSaved = true;
+                for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                    var editor = (Editor) tabbedPane.getComponentAt(i);
+                    if (!editor.isSaved()) {
+                        allSaved = false;
+                        break;
+                    }
+                }
+
+                if(allSaved) {
+                    e.getWindow().dispose();
+                }else {
+                    var result = JOptionPane.showConfirmDialog(MainWindow.this, "There are unsaved changes. Do you want to save them?", "Unsaved Changes", JOptionPane.YES_NO_CANCEL_OPTION);
+                    if(result == JOptionPane.YES_OPTION) {
+                        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                            var editor = (Editor) tabbedPane.getComponentAt(i);
+                            if(!editor.saveFile()){
+                                return;
+                            }
+                        }
+                        e.getWindow().dispose();
+                    }else if(result == JOptionPane.NO_OPTION) {
+                        e.getWindow().dispose();
+                    }
+                }
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                System.out.println("Saving recent files");
+                RecentFiles.getInstance().save();
+            }
+        });
+
         setSize(800, 600);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -55,6 +95,18 @@ public class MainWindow extends JFrame {
         openFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         openFileMenuItem.addActionListener(e -> openFile(null));
         fileMenu.add(openFileMenuItem);
+        //Open Recent Files submenu
+        JMenu openRecentFilesMenu = new JMenu("Open Recent File");
+        var recentFiles = RecentFiles.getInstance();
+        recentFiles.addWatcher(rf -> {
+            openRecentFilesMenu.removeAll();
+            for (var file : rf) {
+                var menuItem = new JMenuItem(file);
+                menuItem.addActionListener(e -> openFile(file));
+                openRecentFilesMenu.add(menuItem);
+            }
+        });
+        fileMenu.add(openRecentFilesMenu);
         //Save File
         JMenuItem saveFileMenuItem = new JMenuItem("Save File");
         saveFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
@@ -103,10 +155,7 @@ public class MainWindow extends JFrame {
         //exit
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> {
-            //close all tabs
-            closeAllTabsMenuItem.doClick();
-            //exit the application
-            System.exit(0);
+            dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         });
 
         //add the jmenu bar

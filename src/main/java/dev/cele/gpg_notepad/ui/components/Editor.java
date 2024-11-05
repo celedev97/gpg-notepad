@@ -1,6 +1,7 @@
 package dev.cele.gpg_notepad.ui.components;
 
-import dev.cele.gpg_notepad.ui.Settings;
+import dev.cele.gpg_notepad.Settings;
+import dev.cele.gpg_notepad.ui.RecentFiles;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
@@ -179,6 +180,8 @@ public class Editor extends JPanel {
         status = "Ready";
         setSaved(true);
         SwingUtilities.invokeLater(() -> statusLabel.setText(status));
+
+        RecentFiles.getInstance().add(filePath);
     }
 
     public String getText() {
@@ -186,18 +189,18 @@ public class Editor extends JPanel {
     }
 
 
-    public void saveFile() {
+    public boolean saveFile() {
         if(filePath != null) {
             //save the file
-            writeToFile(filePath);
+            return writeToFile(filePath);
         } else {
             //save as the file
-            saveAsFile();
+            return saveAsFile();
         }
     }
 
     @SneakyThrows
-    public void writeToFile(String filePath) {
+    public boolean writeToFile(String filePath) {
         //write to a temp file
         var tempFile = Files.createTempFile("", "");
         var tmpPath = tempFile.toAbsolutePath().toString();
@@ -237,16 +240,19 @@ public class Editor extends JPanel {
         Files.delete(Path.of(tmpPath + ".gpg"));
 
         setSaved(true);
+        RecentFiles.getInstance().add(filePath);
+        return true;
     }
 
-    public void saveAsFile() {
+    public boolean saveAsFile() {
         //save as
         int result = saveFileChooser.showSaveDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             //save the file
             filePath = saveFileChooser.getSelectedFile().getAbsolutePath();
-            writeToFile(filePath);
+            return writeToFile(filePath);
         }
+        return false;
     }
 
     public void close() {

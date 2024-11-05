@@ -1,11 +1,14 @@
 package dev.cele.gpg_notepad.ui;
 
+import dev.cele.gpg_notepad.Settings;
+
 import javax.swing.*;
 import java.awt.*;
 
-public class SettingsWindow extends JPanel {
+public class SettingsWindow extends JDialog {
 
     public SettingsWindow(JFrame parent) {
+        super(parent, "Settings", true);
         setSize(400, 300);
         setVisible(true);
 

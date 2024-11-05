@@ -1,5 +1,7 @@
-package dev.cele.gpg_notepad.ui;
+package dev.cele.gpg_notepad;
 
+import dev.cele.gpg_notepad.ui.MainWindow;
+import dev.cele.gpg_notepad.ui.SettingsWindow;
 import lombok.SneakyThrows;
 
 import javax.swing.*;
@@ -58,13 +60,12 @@ public class Settings {
         //check if the recipient is empty, in that case show the settings window
         if(recipient.isEmpty()) {
             //open a new Setting Windows on top of the main window
-            var settingsWindow = new SettingsWindow(MainWindow.instance);
-            JDialog dialog = new JDialog(MainWindow.instance, "Settings", true);
+            var settingsWindow = new SettingsWindow(MainWindow.getInstance());
         }
     }
 
     @SneakyThrows
-    static void save(){
+    public static void save(){
         //check if the settings directory exists
         var settingsDir = Path.of(System.getProperty("user.home"), ".gpg_notepad");
         if(!Files.exists(settingsDir)) {

@@ -1,7 +1,6 @@
 package dev.cele.gpg_notepad;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import dev.cele.gpg_notepad.ui.MainWindow;
 
