@@ -37,8 +37,9 @@ public class Editor extends JPanel {
         saveFileChooser.setFileFilter(new FileNameExtensionFilter("Armored TXT File", "txt"));
         saveFileChooser.setFileFilter(new FileNameExtensionFilter("Armored GPG TXT File", "gpgtxt"));
     }
-
-
+    
+    @Getter
+    private final EditorStatus status = new EditorStatus("Ready", 1, 1, 0, 100);
 
     @Getter
     private String filePath;
@@ -57,12 +58,6 @@ public class Editor extends JPanel {
     private String recipient = Settings.recipient;
 
     private JTextArea textArea = new JTextArea();
-    private String status = "Ready";
-    private JLabel statusLabel = new JLabel("Ready");
-    private JLabel charetPositionLabel = new JLabel("Ln 1, Col 1");
-    private JLabel charactersCountLabel = new JLabel("0 Characters");
-    private JLabel zoomLevelLabel = new JLabel("100%");
-    private int zoomLevel = 100;
 
     public String getTitle() {
         var filePart = "Untitled";
@@ -77,6 +72,7 @@ public class Editor extends JPanel {
         return saved ? filePart : filePart + " *";
     }
 
+
     public Editor() {
         super();
 
@@ -88,39 +84,25 @@ public class Editor extends JPanel {
         scrollPane.setViewportView(textArea);
         add(scrollPane, BorderLayout.CENTER);
 
-        //add the status bar to the bottom with 5px padding
-        var statusBar = new JMenuBar();
-        statusBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        statusBar.add(statusLabel);
-        statusBar.add(new JSeparator(SwingConstants.VERTICAL));
-        statusBar.add(charetPositionLabel);
-        statusBar.add(new JSeparator(SwingConstants.VERTICAL));
-        statusBar.add(charactersCountLabel);
-        //add a big gap between the status bar and the right side
-        statusBar.add(Box.createHorizontalGlue());
-        //add the zoom level
-        statusBar.add(new JSeparator(SwingConstants.VERTICAL));
-        statusBar.add(zoomLevelLabel);
-        statusBar.add(new JSeparator(SwingConstants.VERTICAL));
-
-
-        add(statusBar, BorderLayout.SOUTH);
 
         //add a change listener to the text area for changing the isSaved variable
         textArea.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
                 setSaved(false);
+                status.setCharacters(textArea.getText().length());
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
                 setSaved(false);
+                status.setCharacters(textArea.getText().length());
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
                 setSaved(false);
+                status.setCharacters(textArea.getText().length());
             }
         });
 
@@ -130,9 +112,10 @@ public class Editor extends JPanel {
                 var caretPosition = textArea.getCaretPosition();
                 var lineNumber = textArea.getLineOfOffset(caretPosition) + 1;
                 var columnNumber = caretPosition - textArea.getLineStartOffset(lineNumber - 1) + 1;
-                charetPositionLabel.setText("Ln " + lineNumber + ", Col " + columnNumber);
-            } catch (Exception ex) {
-                charetPositionLabel.setText("Ln 1, Col 1");
+
+                //update the status
+                status.setCaret(lineNumber, columnNumber);
+            } catch (Exception ignored) {
             }
         });
     }
@@ -147,15 +130,13 @@ public class Editor extends JPanel {
     @SneakyThrows
     private void readFile(){
         //create a temporary file and delete it, this will give us a temp file path
-        status = "Creating temporary file...";
-        SwingUtilities.invokeLater(() -> statusLabel.setText(status));
+        this.status.setStatus("Creating temporary file...");
         var tempFile = Files.createTempFile("", "");
         tempFile.toFile().delete();
         var tmpPath = tempFile.toAbsolutePath().toString();
 
         //decrypt the file with gpg
-        status = "Decrypting file...";
-        SwingUtilities.invokeLater(() -> statusLabel.setText(status));
+        this.status.setStatus("Decrypting file...");
         ProcessBuilder processBuilder = new ProcessBuilder(
                 "gpg", "--batch", "--yes", "-o", tmpPath, "--decrypt", filePath
         ).inheritIO();
@@ -167,25 +148,22 @@ public class Editor extends JPanel {
         //get the exit code
         var exitCode = process.waitFor();
         if (exitCode != 0) {
-            SwingUtilities.invokeLater(() -> statusLabel.setText("Failed to decrypt the file!"));
+            this.status.setStatus("Failed to decrypt the file!");
             JOptionPane.showMessageDialog(this, "Failed to decrypt the file", "Error", JOptionPane.ERROR_MESSAGE);
             throw new RuntimeException("Failed to decrypt the file");
         }
 
         //read the decrypted file
-        statusLabel.setText("Reading the decrypted file...");
-        SwingUtilities.invokeLater(() -> statusLabel.setText(status));
+        this.status.setStatus("Reading the decrypted file...");
         var text = Files.readString(Path.of(tmpPath), StandardCharsets.UTF_8);
         textArea.setText(text);
 
         //delete the temp file
-        status = "Deleting temporary file...";
-        SwingUtilities.invokeLater(() -> statusLabel.setText(status));
+        this.status.setStatus("Deleting temporary file...");
         Files.delete(tempFile);
 
-        status = "Ready";
+        this.status.setStatus("Ready");
         setSaved(true);
-        SwingUtilities.invokeLater(() -> statusLabel.setText(status));
 
         RecentFiles.getInstance().add(filePath);
     }
@@ -276,5 +254,48 @@ public class Editor extends JPanel {
         //remove the tab
         var tabbedPane = (JTabbedPane) getParent();
         tabbedPane.remove(tabbedPane.indexOfComponent(this));
+    }
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class EditorStatus {
+        private String status;
+        private Integer line;
+        private Integer column;
+        private Integer characters;
+        private Integer zoomLevel;
+
+        private void setStatus(String s) {
+            this.status = s;
+            updateStatus();
+        }
+
+        private void setCaret(int line, int column) {
+            this.line = line;
+            this.column = column;
+            updateStatus();
+        }
+
+        private void addZoomLevel(int i) {
+            this.setZoomLevel(this.zoomLevel + i);
+            updateStatus();
+        }
+
+        private void setZoomLevel(int i) {
+            this.zoomLevel = i;
+            if (this.zoomLevel < 50) {
+                this.zoomLevel = 50;
+            }
+            updateStatus();
+        }
+
+        public void setCharacters(int length) {
+            this.characters = length;
+            updateStatus();
+        }
+
+        private void updateStatus() {
+            MainWindow.getInstance().getStatusBar().updateStatus(this);
+        }
     }
 }

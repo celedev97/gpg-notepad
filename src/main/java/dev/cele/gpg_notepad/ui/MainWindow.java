@@ -20,6 +20,8 @@ public class MainWindow extends JFrame {
     JTabbedPane tabbedPane = new DnDTabbedPane();
     JMenuBar menuBar = new JMenuBar();
 
+    @Getter
+    StatusBar statusBar = new StatusBar();
 
     public MainWindow() {
         super("GPG Notepad");
@@ -84,6 +86,23 @@ public class MainWindow extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
 
         //create the file menu
+        //add the status bar
+        add(statusBar, BorderLayout.SOUTH);
+
+        //add a listener to the tabbed pane to update the status bar
+        tabbedPane.addChangeListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            if(editor != null) {
+                statusBar.updateStatus(editor.getStatus());
+            }
+        });
+
+        //add the jmenu bar
+        setJMenuBar(
+                initializeMenuBar()
+        );
+
+        instance = this;
         JMenu fileMenu = new JMenu("File");
         //New File
         JMenuItem newTabMenuItem = new JMenuItem("New File");
