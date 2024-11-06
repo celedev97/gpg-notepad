@@ -3,11 +3,11 @@ package dev.cele.gpg_notepad;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatLaf;
 import dev.cele.gpg_notepad.ui.MainWindow;
+import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        var laf = new FlatDarculaLaf();
-        FlatLaf.setup(laf);
+        FlatLaf.setup(new FlatDarculaLaf());
 
         var mainWindow = new MainWindow();
 
@@ -19,5 +19,15 @@ public class Main {
             //open a new file
             mainWindow.newTab();
         }
+
+        setupGlobalExceptionHandling();
     }
+
+    public static void setupGlobalExceptionHandling() {
+        Thread.setDefaultUncaughtExceptionHandler((thread, ex) -> {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(MainWindow.getInstance(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        });
+    }
+
 }
