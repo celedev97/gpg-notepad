@@ -1,9 +1,10 @@
 package dev.cele.gpg_notepad.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.FlatLaf;
+import dev.cele.gpg_notepad.RecentFiles;
 import dev.cele.gpg_notepad.ui.components.DnDTabbedPane;
 import dev.cele.gpg_notepad.ui.components.Editor;
+import dev.cele.gpg_notepad.ui.components.StatusBar;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -18,7 +19,7 @@ public class MainWindow extends JFrame {
     private static MainWindow instance;
 
     JTabbedPane tabbedPane = new DnDTabbedPane();
-    JMenuBar menuBar = new JMenuBar();
+    JMenuBar menuBar;
 
     @Getter
     StatusBar statusBar = new StatusBar();
@@ -85,7 +86,6 @@ public class MainWindow extends JFrame {
 
         add(tabbedPane, BorderLayout.CENTER);
 
-        //create the file menu
         //add the status bar
         add(statusBar, BorderLayout.SOUTH);
 
@@ -103,6 +103,16 @@ public class MainWindow extends JFrame {
         );
 
         instance = this;
+    }
+
+    private JMenuBar initializeMenuBar() {
+        if(menuBar != null) {
+            return menuBar;
+        }
+
+        menuBar = new JMenuBar();
+
+        //#region File Menu
         JMenu fileMenu = new JMenu("File");
         //New File
         JMenuItem newTabMenuItem = new JMenuItem("New File");
@@ -148,7 +158,6 @@ public class MainWindow extends JFrame {
                 ((Editor) tabbedPane.getComponentAt(i)).saveFile();
             }
         });
-        menuBar.add(fileMenu);
 
         //separator
         fileMenu.addSeparator();
@@ -170,17 +179,193 @@ public class MainWindow extends JFrame {
                 closeTabMenuItem.doClick();
             }
         });
+        fileMenu.add(closeAllTabsMenuItem);
 
         //exit
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> {
             dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         });
+        fileMenu.add(exitMenuItem);
 
-        //add the jmenu bar
-        setJMenuBar(menuBar);
+        menuBar.add(fileMenu);
+        //#endregion
 
-        instance = this;
+        //#region Edit Menu
+        JMenu editMenu = new JMenu("Edit");
+        //Undo
+        JMenuItem undoMenuItem = new JMenuItem("Undo");
+        undoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        undoMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.undo();
+        });
+        editMenu.add(undoMenuItem);
+
+        //Redo
+        JMenuItem redoMenuItem = new JMenuItem("Redo");
+        redoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        redoMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.redo();
+        });
+        editMenu.add(redoMenuItem);
+
+        //separator
+        editMenu.addSeparator();
+
+        //Cut
+        JMenuItem cutMenuItem = new JMenuItem("Cut");
+        cutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        cutMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.cut();
+        });
+        editMenu.add(cutMenuItem);
+
+        //Copy
+        JMenuItem copyMenuItem = new JMenuItem("Copy");
+        copyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        copyMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.copy();
+        });
+        editMenu.add(copyMenuItem);
+
+        //Paste
+        JMenuItem pasteMenuItem = new JMenuItem("Paste");
+        pasteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        pasteMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.paste();
+        });
+
+        //Delete
+        JMenuItem deleteMenuItem = new JMenuItem("Delete");
+        deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+        deleteMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.delete();
+        });
+        editMenu.add(pasteMenuItem);
+
+        //separator
+        editMenu.addSeparator();
+
+        //Find
+        JMenuItem findMenuItem = new JMenuItem("Find");
+        findMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        findMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.find();
+        });
+        editMenu.add(findMenuItem);
+
+        //Find next
+        JMenuItem findNextMenuItem = new JMenuItem("Find Next");
+        findNextMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0));
+        findNextMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.findNext();
+        });
+        editMenu.add(findNextMenuItem);
+
+        //Find previous
+        JMenuItem findPreviousMenuItem = new JMenuItem("Find Previous");
+        findPreviousMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, KeyEvent.SHIFT_DOWN_MASK));
+        findPreviousMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.findPrevious();
+        });
+        editMenu.add(findPreviousMenuItem);
+
+        //Replace
+        JMenuItem replaceMenuItem = new JMenuItem("Replace");
+        replaceMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        replaceMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.replace();
+        });
+        editMenu.add(replaceMenuItem);
+
+        //Go to line
+        JMenuItem goToLineMenuItem = new JMenuItem("Go to Line");
+        goToLineMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        goToLineMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.goToLine();
+        });
+        editMenu.add(goToLineMenuItem);
+
+        //separator
+        editMenu.addSeparator();
+
+        //Select All
+        JMenuItem selectAllMenuItem = new JMenuItem("Select All");
+        selectAllMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        selectAllMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.selectAll();
+        });
+        editMenu.add(selectAllMenuItem);
+
+        //Time/Date
+        JMenuItem timeDateMenuItem = new JMenuItem("Time/Date");
+        timeDateMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
+        timeDateMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.insertTimeDate();
+        });
+        editMenu.add(timeDateMenuItem);
+
+        menuBar.add(editMenu);
+        //#endregion
+
+        //#region View Menu
+        JMenu viewMenu = new JMenu("View");
+        //Zoom menu
+        JMenu zoomMenu = new JMenu("Zoom");
+        //Zoom In
+        JMenuItem zoomInMenuItem = new JMenuItem("Zoom In");
+        zoomInMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ADD, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        zoomInMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.zoomIn();
+        });
+        zoomMenu.add(zoomInMenuItem);
+        //Zoom Out
+        JMenuItem zoomOutMenuItem = new JMenuItem("Zoom Out");
+        zoomOutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        zoomOutMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.zoomOut();
+        });
+
+        zoomMenu.add(zoomOutMenuItem);
+        //Reset Zoom
+        JMenuItem resetZoomMenuItem = new JMenuItem("Reset Zoom");
+        resetZoomMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+
+        resetZoomMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.resetZoom();
+        });
+        zoomMenu.add(resetZoomMenuItem);
+
+        viewMenu.add(zoomMenu);
+
+        //word wrap
+        JCheckBoxMenuItem wordWrapMenuItem = new JCheckBoxMenuItem("Word Wrap");
+        wordWrapMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | KeyEvent.SHIFT_DOWN_MASK));
+        wordWrapMenuItem.addActionListener(e -> {
+            var editor = (Editor) tabbedPane.getSelectedComponent();
+            editor.toggleWordWrap();
+        });
+
+        menuBar.add(viewMenu);
+
+
+        return menuBar;
     }
 
     public void openFile(String filePath) {
@@ -211,4 +396,5 @@ public class MainWindow extends JFrame {
         tabbedPane.addTab(editor.getTitle(), editor);
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
     }
+
 }

@@ -59,6 +59,8 @@ public class Editor extends JPanel {
 
     private JTextArea textArea = new JTextArea();
 
+    private FindPanel findPanel = new FindPanel(this);
+
     public String getTitle() {
         var filePart = "Untitled";
         if(filePath != null) {
@@ -84,6 +86,9 @@ public class Editor extends JPanel {
         scrollPane.setViewportView(textArea);
         add(scrollPane, BorderLayout.CENTER);
 
+        //add the find panel on top, then hide it
+        add(findPanel, BorderLayout.NORTH);
+        findPanel.setVisible(false);
 
         //add a change listener to the text area for changing the isSaved variable
         textArea.getDocument().addDocumentListener(new DocumentListener() {
@@ -116,6 +121,17 @@ public class Editor extends JPanel {
                 //update the status
                 status.setCaret(lineNumber, columnNumber);
             } catch (Exception ignored) {
+            }
+        });
+
+        scrollPane.addMouseWheelListener(e -> {
+            if(e.isControlDown()) {
+                e.consume();
+                if(e.getWheelRotation() > 0) {
+                    zoomOut();
+                }else {
+                    zoomIn();
+                }
             }
         });
     }
@@ -255,6 +271,105 @@ public class Editor extends JPanel {
         var tabbedPane = (JTabbedPane) getParent();
         tabbedPane.remove(tabbedPane.indexOfComponent(this));
     }
+
+    public void copy() {
+        textArea.copy();
+    }
+
+    public void cut() {
+        textArea.cut();
+    }
+
+    public void paste() {
+        textArea.paste();
+    }
+
+    public void selectAll() {
+        textArea.selectAll();
+    }
+
+    public void undo() {
+        throw new RuntimeException("Not implemented");
+    }
+
+    public void redo() {
+        throw new RuntimeException("Not implemented");
+    }
+
+    public void delete() {
+        textArea.replaceSelection("");
+    }
+
+    public void find() {
+        this.findPanel.setVisible(true);
+    }
+
+    public void findNext() {
+    }
+
+    public void findPrevious() {
+    }
+
+    public void replace() {
+    }
+
+    public void goToLine() {
+        var lineStr = JOptionPane.showInputDialog(this, "Enter line number", "Go to Line", JOptionPane.QUESTION_MESSAGE);
+        if (lineStr == null || lineStr.isEmpty()) {
+            return;
+        }
+
+        //check if lineStr match a number or number:number
+        var pattern = "(\\d+)(:\\d+)?";
+        if (!lineStr.matches(pattern)) {
+            JOptionPane.showMessageDialog(this, "Invalid line number", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        //get the line number and column number
+        var parts = lineStr.split(":");
+        var lineNumber = Integer.parseInt(parts[0]);
+        var columnNumber = parts.length > 1 ? Integer.parseInt(parts[1]) : 1;
+
+        //set the caret position
+        try {
+            var offset = textArea.getLineStartOffset(lineNumber - 1) + columnNumber - 1;
+            textArea.setCaretPosition(offset);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Invalid line number", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void insertTimeDate() {
+        //get the current time and date in the user's locale format
+        var timeDate = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG));
+        textArea.insert(timeDate, textArea.getCaretPosition());
+    }
+
+    public void zoomIn() {
+        this.status.addZoomLevel(+10);
+        adjustFontSize();
+    }
+
+    public void zoomOut() {
+        this.status.addZoomLevel(-10);
+        adjustFontSize();
+    }
+
+    public void resetZoom() {
+        this.status.setZoomLevel(100);
+        adjustFontSize();
+    }
+
+    private void adjustFontSize(){
+        var fontSize = 12 + (this.status.getZoomLevel() - 100) / 10f;
+        textArea.setFont(textArea.getFont().deriveFont(fontSize));
+    }
+
+    public void toggleWordWrap() {
+        textArea.setLineWrap(!textArea.getLineWrap());
+    }
+
     @Getter
     @Setter
     @AllArgsConstructor
