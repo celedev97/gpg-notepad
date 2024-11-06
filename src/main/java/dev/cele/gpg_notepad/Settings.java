@@ -64,6 +64,8 @@ public class Settings {
         }
     }
 
+    private Settings() {}
+
     @SneakyThrows
     public static void save(){
         //check if the settings directory exists

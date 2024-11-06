@@ -1,4 +1,4 @@
-package dev.cele.gpg_notepad.ui;
+package dev.cele.gpg_notepad;
 
 import lombok.Getter;
 
@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class RecentFiles extends LinkedList<String> {
     private ArrayList<Consumer<RecentFiles>> watchers = new ArrayList<>();

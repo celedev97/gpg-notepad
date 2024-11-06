@@ -1,8 +1,11 @@
 package dev.cele.gpg_notepad.ui.components;
 
 import dev.cele.gpg_notepad.Settings;
-import dev.cele.gpg_notepad.ui.RecentFiles;
+import dev.cele.gpg_notepad.RecentFiles;
+import dev.cele.gpg_notepad.ui.MainWindow;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 
 import javax.swing.*;
@@ -10,10 +13,13 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.format.FormatStyle;
 
 public class Editor extends JPanel {
 
