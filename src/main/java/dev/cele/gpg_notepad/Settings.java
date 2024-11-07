@@ -1,5 +1,8 @@
 package dev.cele.gpg_notepad;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import dev.cele.gpg_notepad.ui.MainWindow;
 import dev.cele.gpg_notepad.ui.SettingsWindow;
 import lombok.SneakyThrows;
@@ -14,8 +17,17 @@ import java.util.regex.Pattern;
 
 public class Settings {
 
-    public static String theme = "Dark";
+    private static String theme = "Dark";
     public static String recipient = "";
+
+    public static String getTheme() {
+        return theme;
+    }
+
+    public static void setTheme(String theme) {
+        Settings.theme = theme;
+        setupThemeLaf();
+    }
 
     static {
         //read the settings file from ~/.gpg_notepad/settings
@@ -60,8 +72,10 @@ public class Settings {
         //check if the recipient is empty, in that case show the settings window
         if(recipient.isEmpty()) {
             //open a new Setting Windows on top of the main window
-            var settingsWindow = new SettingsWindow(MainWindow.getInstance());
+            new SettingsWindow(MainWindow.getInstance());
         }
+
+        setupThemeLaf();
     }
 
     private Settings() {}
@@ -96,4 +110,13 @@ public class Settings {
         Files.writeString(settingsFile, settingsFileContent, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
+    public static void setupThemeLaf() {
+        LookAndFeel themeClass;
+        if (theme.equals("Light")) {
+            themeClass = new FlatLightLaf();
+        }else{
+            themeClass = new FlatDarculaLaf();
+        }
+        FlatLaf.setup(themeClass);
+    }
 }

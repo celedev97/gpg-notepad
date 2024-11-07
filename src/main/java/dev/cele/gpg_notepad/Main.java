@@ -7,7 +7,7 @@ import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        FlatLaf.setup(new FlatDarculaLaf());
+        Settings.setupThemeLaf();
 
         var mainWindow = new MainWindow();
 

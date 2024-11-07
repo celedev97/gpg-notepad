@@ -184,6 +184,21 @@ public class MainWindow extends JFrame {
         });
         fileMenu.add(closeAllTabsMenuItem);
 
+        //separator
+        fileMenu.addSeparator();
+
+        //Settings
+        JMenuItem settingsMenuItem = new JMenuItem("Settings");
+        settingsMenuItem.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> {
+                new SettingsWindow(MainWindow.getInstance());
+            });
+        });
+        fileMenu.add(settingsMenuItem);
+
+        //separator
+        fileMenu.addSeparator();
+
         //exit
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> {
