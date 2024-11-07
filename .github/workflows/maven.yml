@@ -67,7 +67,7 @@ jobs:
 
       - name: Create go-java.json
         run: |
-          echo "{\"javaVersion\":21,\"launch\":\"./app.jar\"}" > go-java.json
+          echo '{"javaVersion":21,"launch":"./app.jar"}' > go-java.json
 
       - name: Save bundle
         uses: actions/upload-artifact@v3
@@ -110,7 +110,7 @@ jobs:
 
       - name: Create go-java.json
         run: |
-          echo "{\"javaVersion\":21,\"launch\":\"./app.jar\"}" > go-java.json
+          echo '{"javaVersion":21,"launch":"./app.jar"}' > go-java.json
 
       - name: Save bundle
         uses: actions/upload-artifact@v3
