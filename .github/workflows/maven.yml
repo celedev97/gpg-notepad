@@ -57,7 +57,9 @@ jobs:
       - name: Download and build go-java-launcher
         run: |
           git clone --depth 1 --branch v0.0.4 https://github.com/celedev97/go-java-launcher
+          cd go-java-launcher
           make windows
+          cd $GITHUB_WORKSPACE
 
       - name: Copy artifact
         run: |
@@ -95,7 +97,9 @@ jobs:
       - name: Download and build go-java-launcher
         run: |
           git clone --depth 1 --branch v0.0.4 https://github.com/celedev97/go-java-launcher
+          cd go-java-launcher
           make linux
+          cd $GITHUB_WORKSPACE
 
       - name: Copy artifact
         run: |
