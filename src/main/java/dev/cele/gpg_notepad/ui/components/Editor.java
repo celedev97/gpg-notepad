@@ -2,6 +2,7 @@ package dev.cele.gpg_notepad.ui.components;
 
 import dev.cele.gpg_notepad.Settings;
 import dev.cele.gpg_notepad.RecentFiles;
+import dev.cele.gpg_notepad.ui.FileDialogHelper;
 import dev.cele.gpg_notepad.ui.MainWindow;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,22 +23,6 @@ import java.nio.file.StandardOpenOption;
 import java.time.format.FormatStyle;
 
 public class Editor extends JPanel {
-
-    public static final JFileChooser openFileChooser = new JFileChooser();
-    public static final JFileChooser saveFileChooser = new JFileChooser();
-
-    static {
-        openFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        openFileChooser.setMultiSelectionEnabled(false);
-        openFileChooser.setAcceptAllFileFilterUsed(false);
-        openFileChooser.setFileFilter(new FileNameExtensionFilter("Armored Text File", "txt", "gpgtxt"));
-
-        saveFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        saveFileChooser.setMultiSelectionEnabled(false);
-        saveFileChooser.setFileFilter(new FileNameExtensionFilter("Armored TXT File", "txt"));
-        saveFileChooser.setFileFilter(new FileNameExtensionFilter("Armored GPG TXT File", "gpgtxt"));
-    }
-    
     @Getter
     private final EditorStatus status = new EditorStatus("Ready", 1, 1, 0, 100);
 
@@ -246,13 +231,11 @@ public class Editor extends JPanel {
 
     public boolean saveAsFile() {
         //save as
-        int result = saveFileChooser.showSaveDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            //save the file
-            filePath = saveFileChooser.getSelectedFile().getAbsolutePath();
-            return writeToFile(filePath);
+        var file = FileDialogHelper.showSaveDialog(MainWindow.getInstance());
+        if (file == null) {
+            return false;
         }
-        return false;
+        return writeToFile(file.getAbsolutePath());
     }
 
     public void close() {

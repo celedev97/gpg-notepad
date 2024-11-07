@@ -368,16 +368,17 @@ public class MainWindow extends JFrame {
         return menuBar;
     }
 
-    public void openFile(String filePath) {
-        if(filePath == null) {
-            int result = Editor.openFileChooser.showOpenDialog(this);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                filePath = Editor.openFileChooser.getSelectedFile().getAbsolutePath();
-            }else {
+    public void openFileDialog() {
+        SwingUtilities.invokeLater(() -> {
+            var file = FileDialogHelper.showOpenDialog(this);
+            if(file == null) {
                 return;
             }
-        }
+            openFile(file.getAbsolutePath());
+        });
+    }
 
+    public void openFile(String filePath) {
         var editor = new Editor(filePath);
         tabbedPane.addTab(editor.getTitle(), editor);
 
