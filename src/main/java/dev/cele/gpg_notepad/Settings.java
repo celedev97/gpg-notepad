@@ -72,6 +72,8 @@ public class Settings {
         //check if the recipient is empty, in that case show the settings window
         if(recipient.isEmpty()) {
             //open a new Setting Windows on top of the main window
+            Settings.save();
+            setupThemeLaf();
             new SettingsWindow(MainWindow.getInstance());
         }
 
