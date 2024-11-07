@@ -8,6 +8,8 @@ public class StatusBar extends JMenuBar {
     private final JLabel charetPositionLabel = new JLabel();
     private final JLabel charactersCountLabel = new JLabel();
     private final JLabel zoomLevelLabel = new JLabel();
+
+    private Editor.EditorStatus status;
     
     public StatusBar() {
         super();
@@ -27,9 +29,12 @@ public class StatusBar extends JMenuBar {
     }
 
     public void updateStatus(Editor.EditorStatus status) {
-        statusLabel.setText(status.getStatus());
-        charetPositionLabel.setText("Ln " + status.getLine() + ", Col " + status.getColumn());
-        charactersCountLabel.setText(status.getCharacters() + " characters");
-        zoomLevelLabel.setText(status.getZoomLevel() + "%");
+        this.status = status;
+        SwingUtilities.invokeLater(() -> {
+            statusLabel.setText(this.status.getStatus());
+            charetPositionLabel.setText("Ln " + this.status.getLine() + ", Col " + this.status.getColumn());
+            charactersCountLabel.setText(this.status.getCharacters() + " characters");
+            zoomLevelLabel.setText(this.status.getZoomLevel() + "%");
+        });
     }
 }

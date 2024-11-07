@@ -122,7 +122,7 @@ public class MainWindow extends JFrame {
         //Open File
         JMenuItem openFileMenuItem = new JMenuItem("Open File");
         openFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        openFileMenuItem.addActionListener(e -> openFile(null));
+        openFileMenuItem.addActionListener(e -> openFileDialog());
         fileMenu.add(openFileMenuItem);
         //Open Recent Files submenu
         JMenu openRecentFilesMenu = new JMenu("Open Recent File");
@@ -147,7 +147,10 @@ public class MainWindow extends JFrame {
         JMenuItem saveAsFileMenuItem = new JMenuItem("Save As");
         saveAsFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | KeyEvent.SHIFT_DOWN_MASK));
         saveAsFileMenuItem.addActionListener(e -> {
-            ((Editor) tabbedPane.getSelectedComponent()).saveAsFile();
+            //invokeLater so the menù can correctly close before showing the dialog
+            SwingUtilities.invokeLater(() -> {
+                ((Editor) tabbedPane.getSelectedComponent()).saveAsFile();
+            });
         });
         fileMenu.add(saveAsFileMenuItem);
         //Save All Files
@@ -281,7 +284,7 @@ public class MainWindow extends JFrame {
 
         //Replace
         JMenuItem replaceMenuItem = new JMenuItem("Replace");
-        replaceMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        replaceMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         replaceMenuItem.addActionListener(e -> {
             var editor = (Editor) tabbedPane.getSelectedComponent();
             editor.replace();
@@ -361,6 +364,7 @@ public class MainWindow extends JFrame {
             var editor = (Editor) tabbedPane.getSelectedComponent();
             editor.toggleWordWrap();
         });
+        viewMenu.add(wordWrapMenuItem);
 
         menuBar.add(viewMenu);
 

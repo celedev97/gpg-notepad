@@ -12,7 +12,10 @@ import lombok.SneakyThrows;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -20,6 +23,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
 public class Editor extends JPanel {
@@ -43,6 +49,8 @@ public class Editor extends JPanel {
     private String recipient = Settings.recipient;
 
     private JTextArea textArea = new JTextArea();
+    final UndoManager undo = new UndoManager();
+
 
     private FindPanel findPanel = new FindPanel(this);
 
@@ -62,6 +70,13 @@ public class Editor extends JPanel {
 
     public Editor() {
         super();
+
+        // Listen for undo and redo events
+        textArea.getDocument().addUndoableEditListener(new UndoableEditListener() {
+            public void undoableEditHappened(UndoableEditEvent evt) {
+                undo.addEdit(evt.getEdit());
+            }
+        });
 
         //set the layout to border layout
         setLayout(new BorderLayout());
@@ -224,6 +239,8 @@ public class Editor extends JPanel {
         Files.delete(tempFile);
         Files.delete(Path.of(tmpPath + ".gpg"));
 
+        //set the file path and saved
+        this.filePath = filePath;
         setSaved(true);
         RecentFiles.getInstance().add(filePath);
         return true;
@@ -269,14 +286,19 @@ public class Editor extends JPanel {
 
     public void selectAll() {
         textArea.selectAll();
+        textArea.requestFocus();
     }
 
     public void undo() {
-        throw new RuntimeException("Not implemented");
+        if (undo.canUndo()) {
+            undo.undo();
+        }
     }
 
     public void redo() {
-        throw new RuntimeException("Not implemented");
+        if (undo.canRedo()) {
+            undo.redo();
+        }
     }
 
     public void delete() {
@@ -288,12 +310,69 @@ public class Editor extends JPanel {
     }
 
     public void findNext() {
+        var filter = this.findPanel.getFilter();
+        if (filter == null) {
+            return;
+        }
+
+        var text = textArea.getText();
+        var start = textArea.getCaretPosition() + 1;
+        var index = text.indexOf(filter, start);
+        if (index == -1) {
+            index = text.indexOf(filter);
+        }
+
+        if (index != -1) {
+            textArea.select(index, index + filter.length());
+            textArea.requestFocus();
+        }else{
+            status.setStatus("No matches found");
+        }
     }
 
     public void findPrevious() {
+        var filter = this.findPanel.getFilter();
+        if (filter == null) {
+            return;
+        }
+
+        var text = textArea.getText();
+        var start = textArea.getSelectionStart();
+
+        var search = text.substring(0, start);
+        var index = search.lastIndexOf(filter);
+
+        if (index != -1) {
+            textArea.requestFocus();
+            textArea.select(index, index + filter.length());
+        }else{
+            status.setStatus("No matches found");
+        }
     }
 
     public void replace() {
+        this.findPanel.setVisible(true);
+        this.findPanel.setReplacePanelVisible(true);
+    }
+
+    public void replaceNext() {
+        //check if the selected text is the same as the filter
+        var filter = this.findPanel.getFilter();
+        var selectedText = textArea.getSelectedText();
+
+        if (selectedText != null && selectedText.equals(filter)) {
+            textArea.replaceSelection(this.findPanel.getReplace());
+        } else {
+            findNext();
+        }
+    }
+
+    public void replaceAll() {
+        var filter = this.findPanel.getFilter();
+        var replace = this.findPanel.getReplace();
+        var text = textArea.getText();
+        text = text.replace(filter, replace);
+        textArea.setText(text);
     }
 
     public void goToLine() {
@@ -325,7 +404,7 @@ public class Editor extends JPanel {
 
     public void insertTimeDate() {
         //get the current time and date in the user's locale format
-        var timeDate = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG));
+        var timeDate = LocalDateTime.now().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         textArea.insert(timeDate, textArea.getCaretPosition());
     }
 
