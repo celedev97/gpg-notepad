@@ -89,6 +89,9 @@ jobs:
         with:
           name: app-jar
 
+      - name: Setup xorg-dev
+        run: sudo apt-get install xorg-dev -y
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
