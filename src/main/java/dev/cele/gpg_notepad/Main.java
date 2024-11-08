@@ -7,7 +7,8 @@ import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        Settings.setupThemeLaf();
+        LafHelper.setupThemeLaf();
+        Settings.openIfNeeded();
 
         var mainWindow = new MainWindow();
 

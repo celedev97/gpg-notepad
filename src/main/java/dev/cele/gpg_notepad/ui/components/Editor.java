@@ -15,6 +15,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.DefaultCaret;
 import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -75,6 +76,14 @@ public class Editor extends JPanel {
         textArea.getDocument().addUndoableEditListener(new UndoableEditListener() {
             public void undoableEditHappened(UndoableEditEvent evt) {
                 undo.addEdit(evt.getEdit());
+            }
+        });
+
+        //always show caret
+        textArea.setCaret(new DefaultCaret() {
+            @Override
+            public void setSelectionVisible(boolean visible) {
+                super.setSelectionVisible(true);
             }
         });
 

@@ -17,17 +17,8 @@ import java.util.regex.Pattern;
 
 public class Settings {
 
-    private static String theme = "Dark";
+    public static String theme = LafHelper.lafMap.keySet().stream().findFirst().orElse(null);
     public static String recipient = "";
-
-    public static String getTheme() {
-        return theme;
-    }
-
-    public static void setTheme(String theme) {
-        Settings.theme = theme;
-        setupThemeLaf();
-    }
 
     static {
         //read the settings file from ~/.gpg_notepad/settings
@@ -67,20 +58,19 @@ public class Settings {
                 throw new RuntimeException(e);
             }
         }
-
-
-        //check if the recipient is empty, in that case show the settings window
-        if(recipient.isEmpty()) {
-            //open a new Setting Windows on top of the main window
-            Settings.save();
-            setupThemeLaf();
-            new SettingsWindow(MainWindow.getInstance());
-        }
-
-        setupThemeLaf();
     }
 
     private Settings() {}
+
+    public static void openIfNeeded() {
+        //check if the recipient is empty, in that case show the settings window
+        if(recipient.isEmpty()) {
+            //open a new Setting Windows on top of the main window
+            SwingUtilities.invokeLater(() -> {
+                new SettingsWindow(MainWindow.getInstance());
+            });
+        }
+    }
 
     @SneakyThrows
     public static void save(){
@@ -97,28 +87,17 @@ public class Settings {
         //update the settings file content
         for(var field : Settings.class.getDeclaredFields()) {
             var fieldRegex = Pattern.compile("^" + field.getName() + ".*$", Pattern.MULTILINE);
+            var newLine = field.getName() + "=" + field.get(null);
 
-            //check if the field is present in the settings file
+            //check if the field is present in the settings file, if it is replace it, if not add it
             if(fieldRegex.matcher(settingsFileContent).find()) {
-                //replace the field
-                settingsFileContent = settingsFileContent.replaceAll(fieldRegex.pattern(), field.getName() + "=" + field.get(null));
-            }else{
-                //add the field
-                settingsFileContent += field.getName() + "=" + field.get(null) + "\n";
+                settingsFileContent = fieldRegex.matcher(settingsFileContent).replaceAll(newLine);
+            } else {
+                settingsFileContent += newLine + "\n";
             }
         }
 
         //write the settings to the file
         Files.writeString(settingsFile, settingsFileContent, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-    }
-
-    public static void setupThemeLaf() {
-        LookAndFeel themeClass;
-        if (theme.equals("Light")) {
-            themeClass = new FlatLightLaf();
-        }else{
-            themeClass = new FlatDarculaLaf();
-        }
-        FlatLaf.setup(themeClass);
     }
 }
