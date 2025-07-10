@@ -129,7 +129,9 @@ public class MainWindow extends JFrame {
         var recentFiles = RecentFiles.getInstance();
         recentFiles.addWatcher(rf -> {
             openRecentFilesMenu.removeAll();
-            for (var file : rf) {
+            // Iterate in reverse order to show most recent files first
+            for (int i = rf.size() - 1; i >= 0; i--) {
+                var file = rf.get(i);
                 var menuItem = new JMenuItem(file);
                 menuItem.addActionListener(e -> openFile(file));
                 openRecentFilesMenu.add(menuItem);
