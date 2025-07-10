@@ -1,5 +1,6 @@
 package dev.cele.gpg_notepad.ui.components;
 
+import dev.cele.gpg_notepad.OpenedTabs;
 import dev.cele.gpg_notepad.Settings;
 import dev.cele.gpg_notepad.RecentFiles;
 import dev.cele.gpg_notepad.ui.FileDialogHelper;
@@ -210,6 +211,8 @@ public class Editor extends JPanel {
 
     @SneakyThrows
     public boolean writeToFile(String filePath) {
+        boolean wasFirstSave = (this.filePath == null);
+        
         //write to a temp file
         var tempFile = Files.createTempFile("", "");
         var tmpPath = tempFile.toAbsolutePath().toString();
@@ -252,6 +255,12 @@ public class Editor extends JPanel {
         this.filePath = filePath;
         setSaved(true);
         RecentFiles.getInstance().add(filePath);
+        
+        // Add to opened tabs if this is the first save
+        if (wasFirstSave) {
+            OpenedTabs.getInstance().add(filePath);
+        }
+        
         return true;
     }
 
@@ -274,6 +283,11 @@ public class Editor extends JPanel {
             } else if (result == JOptionPane.CANCEL_OPTION) {
                 return;
             }
+        }
+
+        // Remove from opened tabs when closing
+        if (filePath != null) {
+            OpenedTabs.getInstance().remove(filePath);
         }
 
         //remove the tab

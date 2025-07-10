@@ -4,6 +4,8 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatLaf;
 import dev.cele.gpg_notepad.ui.MainWindow;
 import javax.swing.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] args) {
@@ -17,8 +19,22 @@ public class Main {
             //open the file
             mainWindow.openFile(args[0]);
         } else {
-            //open a new file
-            mainWindow.newTab();
+            // Restore previously opened tabs
+            var openedTabs = OpenedTabs.getInstance();
+            boolean hasOpenedTabs = false;
+            
+            // Open all previously opened files that still exist
+            for (String filePath : openedTabs) {
+                if (Files.exists(Path.of(filePath))) {
+                    mainWindow.openFile(filePath);
+                    hasOpenedTabs = true;
+                }
+            }
+            
+            // If no tabs were opened, create a new empty tab
+            if (!hasOpenedTabs) {
+                mainWindow.newTab();
+            }
         }
 
         setupGlobalExceptionHandling();
