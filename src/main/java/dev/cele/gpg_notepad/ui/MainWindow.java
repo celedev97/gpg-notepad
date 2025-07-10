@@ -1,6 +1,7 @@
 package dev.cele.gpg_notepad.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import dev.cele.gpg_notepad.OpenedTabs;
 import dev.cele.gpg_notepad.RecentFiles;
 import dev.cele.gpg_notepad.ui.components.DnDTabbedPane;
 import dev.cele.gpg_notepad.ui.components.Editor;
@@ -35,6 +36,16 @@ public class MainWindow extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                // Save current opened tabs state before closing
+                var openedTabs = OpenedTabs.getInstance();
+                openedTabs.clear();
+                for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                    var editor = (Editor) tabbedPane.getComponentAt(i);
+                    if (editor.getFilePath() != null) {
+                        openedTabs.add(editor.getFilePath());
+                    }
+                }
+                
                 var allSaved = true;
                 for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                     var editor = (Editor) tabbedPane.getComponentAt(i);
@@ -64,8 +75,9 @@ public class MainWindow extends JFrame {
 
             @Override
             public void windowClosed(WindowEvent e) {
-                System.out.println("Saving recent files");
+                System.out.println("Saving recent files and opened tabs");
                 RecentFiles.getInstance().save();
+                OpenedTabs.getInstance().save();
             }
         });
 
@@ -80,6 +92,10 @@ public class MainWindow extends JFrame {
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tabbedPane, tabIndex) -> {
             var editor = (Editor) tabbedPane.getComponentAt(tabIndex);
+            // Remove from opened tabs when tab is closed
+            if (editor.getFilePath() != null) {
+                OpenedTabs.getInstance().remove(editor.getFilePath());
+            }
             editor.close();
         });
 
@@ -400,6 +416,9 @@ public class MainWindow extends JFrame {
     public void openFile(String filePath) {
         var editor = new Editor(filePath);
         tabbedPane.addTab(editor.getTitle(), editor);
+
+        // Add to opened tabs list
+        OpenedTabs.getInstance().add(filePath);
 
         //check if the current tab is an untitled empty tab
         var currentEditor = (Editor) tabbedPane.getSelectedComponent();
