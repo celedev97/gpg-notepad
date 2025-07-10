@@ -1,15 +1,16 @@
 package dev.cele.gpg_notepad;
 
-import lombok.Getter;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 public class OpenedTabs extends LinkedList<String> {
-    @Getter
     static private OpenedTabs instance = new OpenedTabs();
+    
+    public static OpenedTabs getInstance() {
+        return instance;
+    }
 
     private OpenedTabs() {
         super();
